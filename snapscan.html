@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnapScan — Smart Saver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ss-blue: #2196F3;
+    --ss-blue-dk: #1565C0;
+    --ss-blue-lt: #E3F2FD;
+    --ss-green: #1D9E75;
+    --ss-green-lt: #E1F5EE;
+    --ss-green-dk: #085041;
+    --ss-green-border: #9FE1CB;
+    --bg: #ffffff;
+    --bg-secondary: #F5F5F5;
+    --text: #1a1a1a;
+    --text-muted: #6B7280;
+    --text-hint: #9CA3AF;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --success-bg: #DCFCE7;
+    --success-text: #166534;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: #e5e7eb;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  .shell {
+    width: 390px;
+    background: #F5F5F5;
+    border-radius: 40px;
+    border: 8px solid #1a1a1a;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 844px;
+    position: relative;
+  }
+
+  .notch {
+    height: 44px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .notch-bar {
+    width: 120px;
+    height: 30px;
+    background: #1a1a1a;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .topbar {
+    background: #fff;
+    border-bottom: 0.5px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .menu-txt { font-size: 13px; font-weight: 500; color: var(--ss-blue); }
+  .logo { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--ss-blue); }
+  .logo-ring {
+    width: 24px; height: 24px;
+    border: 2.5px solid var(--ss-blue);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-ring::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--ss-blue);
+    border-radius: 50%;
+  }
+  .help-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ss-blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--ss-blue);
+    cursor: pointer;
+  }
+
+  .screens { flex: 1; overflow: hidden; min-height: 0; }
+  .scr { display: none; background: #fff; height: 100%; overflow-y: auto; }
+  .scr.on { display: block; }
+  .scroll { padding: 12px 16px; }
+
+  /* ── Balance card ── */
+  .bal-card { background: var(--ss-blue); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+  .bal-label { font-size: 12px; color: rgba(255,255,255,0.8); margin-bottom: 2px; }
+  .bal-amount { font-size: 28px; font-weight: 600; color: #fff; margin-bottom: 14px; }
+
+  .action-row { display: flex; gap: 5px; }
+  .action-btn {
+    flex: 1; min-width: 0;
+    background: rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 8px 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px; cursor: pointer; border: none;
+    overflow: hidden;
+  }
+  .action-btn i { font-size: 17px; color: #fff; line-height: 1; display: block; width: 100%; text-align: center; }
+  .action-btn span { font-size: 9px; color: #fff; font-weight: 500; text-align: center; line-height: 1.2; display: block; width: 100%; }
+  .action-btn.smart-save { background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.5); }
+  .action-btn.smart-save i, .action-btn.smart-save span { color: #fff; }
+
+  /* ── Sweep nudge ── */
+  .sweep-nudge {
+    background: var(--ss-green-lt);
+    border-radius: 12px;
+    padding: 11px 12px;
+    display: flex; align-items: center; gap: 9px;
+    margin-bottom: 12px;
+    cursor: pointer; border: 0.5px solid var(--ss-green-border);
+    width: 100%; text-align: left;
+  }
+  .sweep-icon {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #fff; border: 0.5px solid var(--ss-green-border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .sweep-icon i { font-size: 17px; color: var(--ss-green); }
+  .sweep-title { font-size: 12px; font-weight: 500; color: var(--ss-green-dk); }
+  .sweep-sub { font-size: 11px; color: #0F6E56; margin-top: 1px; }
+
+  /* ── Home banner ── */
+  .invest-banner {
+    background: var(--ss-green-lt);
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; margin-bottom: 12px;
+    border: 0.5px solid var(--ss-green-border); width: 100%; text-align: left;
+  }
+  .banner-icon-box {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--ss-green);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .banner-title { font-size: 13px; font-weight: 500; color: var(--ss-green-dk); }
+  .banner-sub { font-size: 11px; color: #0F6E56; margin-top: 1px; }
+
+  /* ── Transaction row ── */
+  .tx-row {
+    background: #fff; border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 7px;
+  }
+  .tx-av {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--ss-blue-lt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; color: var(--ss-blue-dk); flex-shrink: 0;
+  }
+  .tx-date { font-size: 10px; color: var(--text-muted); }
+  .tx-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .tx-amt { font-size: 13px; font-weight: 500; color: var(--ss-blue); white-space: nowrap; margin-left: auto; }
+
+  /* ── Section label ── */
+  .section-label { font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--text); }
+
+  /* ── Back row ── */
+  .back-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 9px 16px; cursor: pointer;
+    color: var(--ss-blue); font-size: 13px; font-weight: 500;
+    border-bottom: 0.5px solid var(--border);
+    background: #fff; flex-shrink: 0;
+  }
+
+  /* ── Holding card ── */
+  .ss-holding { background: #F5F5F5; border-radius: 12px; padding: 12px 13px; margin-bottom: 12px; }
+  .ss-hold-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ss-hold-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--ss-green);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .ss-hold-icon i { font-size: 18px; color: #fff; }
+  .hold-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .hold-sub { font-size: 11px; color: var(--text-muted); }
+  .hold-vals { display: flex; justify-content: space-between; padding-top: 8px; border-top: 0.5px solid var(--border); }
+  .hval { text-align: center; }
+  .hval-label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+  .hval-num { font-size: 13px; font-weight: 500; color: var(--text); }
+  .hval-num.green { color: var(--ss-green); }
+
+  /* ── Pill ── */
+  .pill {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: var(--ss-green-lt); border-radius: 20px;
+    padding: 3px 9px; font-size: 11px; font-weight: 500; color: var(--ss-green-dk);
+    margin-left: auto; flex-shrink: 0;
+  }
+
+  /* ── Info rows ── */
+  .info-box { background: #F5F5F5; border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+  .info-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--text-muted); }
+  .info-val { font-weight: 500; text-align: right; padding-left: 8px; color: var(--text); }
+
+  /* ── Buttons ── */
+  .primary-btn {
+    width: 100%; padding: 12px;
+    background: var(--ss-blue); border: none; border-radius: 28px;
+    color: #fff; font-size: 14px; font-weight: 500;
+    cursor: pointer; margin-top: 4px; font-family: var(--font);
+  }
+  .primary-btn:disabled { opacity: 0.4; cursor: default; }
+  .ghost-btn {
+    width: 100%; padding: 10px;
+    background: transparent; border: 0.5px solid var(--border-md); border-radius: 28px;
+    color: var(--ss-blue); font-size: 13px; font-weight: 500;
+    cursor: pointer; margin-top: 8px; font-family: var(--font);
+  }
+  .two-col { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-bottom: 14px; }
+  .two-col .primary-btn, .two-col .ghost-btn { margin: 0; border-radius: 10px; font-size: 13px; padding: 11px; }
+
+  /* ── Disclaimer ── */
+  .disc {
+    background: #F5F5F5; border-radius: 9px; padding: 9px 11px;
+    font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 11px;
+  }
+
+  /* ── Sweep screen ── */
+  .sweep-green-box { background: var(--ss-green-lt); border-radius: 12px; padding: 11px 13px; margin-bottom: 12px; }
+  .sweep-green-box .info-row { border-color: var(--ss-green-border); }
+  .sweep-green-box .info-label { color: var(--ss-green-dk); }
+  .sweep-green-box .info-val { color: var(--ss-green-dk); }
+  .sweep-green-box .info-label.bold, .sweep-green-box .info-val.bold { font-weight: 600; }
+  .proj-box {
+    background: #F5F5F5; border-radius: 10px; padding: 9px 12px;
+    margin-bottom: 12px; font-size: 12px; color: var(--text-muted);
+  }
+  .slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .slider-row label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--ss-blue); }
+
+  /* ── Invest screen ── */
+  .amount-input {
+    width: 100%; border: 0.5px solid var(--border-md); border-radius: 10px;
+    padding: 12px 14px; font-size: 20px; font-weight: 500; margin-bottom: 12px;
+    color: var(--text); background: #fff; font-family: var(--font);
+    outline: none;
+  }
+  .amount-input:focus { border-color: var(--ss-blue); }
+  .paymethod {
+    border: 1.5px solid var(--ss-blue); border-radius: 10px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 11px;
+  }
+  .radio-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 5px solid var(--ss-blue); flex-shrink: 0;
+  }
+
+  /* ── Success ── */
+  .success-ring {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--success-bg);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;
+  }
+  .success-ring i { font-size: 30px; color: var(--success-text); }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    background: #fff; border-top: 0.5px solid var(--border);
+    display: flex; padding: 8px 0 18px; flex-shrink: 0;
+  }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 10px; color: var(--text-muted); font-family: var(--font);
+  }
+  .tab.active { color: var(--ss-blue); }
+  .tab.clickable { cursor: pointer; }
+  .tab i { font-size: 20px; }
+  .tab-cam { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; }
+  .cam-btn {
+    width: 48px; height: 48px; background: var(--ss-blue); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .cam-btn i { font-size: 22px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="notch"><div class="notch-bar"></div></div>
+
+  <div class="topbar">
+    <span class="menu-txt">MENU</span>
+    <div class="logo"><div class="logo-ring"></div>SnapScan</div>
+    <div class="help-btn">?</div>
+  </div>
+
+  <div class="screens">
+
+    <!-- HOME -->
+    <div id="s-home" class="scr">
+      <div class="scroll">
+        <p class="section-label">Recent payments</p>
+        <div class="tx-row">
+          <div class="tx-av" style="background:#FFF9C4;color:#F57F17">T4</div>
+          <div style="flex:1;min-width:0"><p class="tx-date">Paid on 10 May</p><p class="tx-name">Tip4Change</p></div>
+          <span class="tx-amt">R5.00</span>
+          <i class="ti ti-chevron-right" style="color:var(--ss-blue);font-size:14px;flex-shrink:0"></i>
+        </div>
+        <div class="tx-row">
+          <div class="tx-av" style="background:#ECEFF1;color:#37474F;font-size:9px">BA</div>
+          <div style="flex:1;min-width:0"><p class="tx-date">Paid on 08 May</p><p class="tx-name">Back Alley PTY LTD.</p></div>
+          <span class="tx-amt">R35.00</span>
+          <i class="ti ti-chevron-right" style="color:var(--ss-blue);font-size:14px;flex-shrink:0"></i>
+        </div>
+        <div class="tx-row">
+          <div class="tx-av">TI</div>
+          <div style="flex:1;min-width:0"><p class="tx-date">Paid on 06 May</p><p class="tx-name">Temple Israel</p></div>
+          <span class="tx-amt">R180.00</span>
+          <i class="ti ti-chevron-right" style="color:var(--ss-blue);font-size:14px;flex-shrink:0"></i>
+        </div>
+        <p class="section-label" style="margin-top:8px">Make your money work harder</p>
+        <button class="invest-banner" onclick="go('s-portfolio')">
+          <div class="banner-icon-box"><i class="ti ti-chart-arrows-vertical" style="font-size:20px;color:#fff"></i></div>
+          <div style="flex:1">
+            <p class="banner-title">Vault22 Smart Saver</p>
+            <p class="banner-sub">Earn 8.6% p.a. — next-day access</p>
+          </div>
+          <i class="ti ti-chevron-right" style="font-size:16px;color:var(--ss-green);flex-shrink:0"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- WALLET -->
+    <div id="s-wallet" class="scr on">
+      <div class="scroll">
+        <div class="bal-card">
+          <p class="bal-label">Current balance</p>
+          <p class="bal-amount" id="walletBalDisplay">R20.00</p>
+          <div class="action-row">
+            <button class="action-btn"><i class="ti ti-send"></i><span>Send</span></button>
+            <button class="action-btn"><i class="ti ti-circle-plus"></i><span>Top up</span></button>
+            <button class="action-btn"><i class="ti ti-cash"></i><span>Withdraw</span></button>
+            <button class="action-btn"><i class="ti ti-qrcode"></i><span>Receive</span></button>
+            <button class="action-btn smart-save" onclick="go('s-portfolio')">
+              <i class="ti ti-chart-arrows-vertical"></i><span>Smart Save</span>
+            </button>
+          </div>
+        </div>
+
+        <button class="sweep-nudge" id="sweepNudge" onclick="go('s-sweep')">
+          <div class="sweep-icon"><i class="ti ti-arrow-autofit-up"></i></div>
+          <div style="flex:1">
+            <p class="sweep-title" id="nudgeTitle">Your R20.00 could be earning 8.6%</p>
+            <p class="sweep-sub">Sweep idle wallet funds to Smart Saver</p>
+          </div>
+          <i class="ti ti-chevron-right" style="margin-left:auto;color:var(--ss-green);font-size:15px;flex-shrink:0"></i>
+        </button>
+
+        <p class="section-label">Recent wallet transactions</p>
+        <div class="tx-row">
+          <div class="tx-av" style="background:#FFF9C4;color:#F57F17">T4</div>
+          <div style="flex:1;min-width:0"><p class="tx-date">Paid on 10 May</p><p class="tx-name">Tip4Change</p></div>
+          <span class="tx-amt">R5.00</span>
+          <i class="ti ti-chevron-right" style="color:var(--ss-blue);font-size:14px;flex-shrink:0"></i>
+        </div>
+        <div class="tx-row">
+          <div class="tx-av" style="background:#ECEFF1;color:#37474F;font-size:9px">BA</div>
+          <div style="flex:1;min-width:0"><p class="tx-date">Paid on 08 May</p><p class="tx-name">Back Alley PTY LTD.</p></div>
+          <span class="tx-amt">R35.00</span>
+          <i class="ti ti-chevron-right" style="color:var(--ss-blue);font-size:14px;flex-shrink:0"></i>
+        </div>
+        <div style="height:6px"></div>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO -->
+    <div id="s-portfolio" class="scr">
+      <div class="back-row" onclick="go('s-wallet')"><i class="ti ti-chevron-left"></i> Wallet</div>
+      <div class="scroll">
+        <div class="ss-holding">
+          <div class="ss-hold-head">
+            <div class="ss-hold-icon"><i class="ti ti-chart-arrows-vertical"></i></div>
+            <div style="min-width:0">
+              <p class="hold-name">Vault22 Smart Saver</p>
+              <p class="hold-sub">Ultra-low risk · FSCA regulated</p>
+            </div>
+            <span class="pill"><i class="ti ti-trending-up" style="font-size:11px"></i> 8.6%</span>
+          </div>
+          <div class="hold-vals">
+            <div class="hval"><p class="hval-label">Invested</p><p class="hval-num" id="portInvested">R220.00</p></div>
+            <div class="hval"><p class="hval-label">Returns</p><p class="hval-num green" id="portReturns">R23.56</p></div>
+            <div class="hval"><p class="hval-label">Total value</p><p class="hval-num" id="portTotal">R243.56</p></div>
+          </div>
+        </div>
+        <div class="two-col">
+          <button class="primary-btn" onclick="go('s-invest')"><i class="ti ti-plus" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Invest more</button>
+          <button class="ghost-btn" onclick="go('s-sweep')"><i class="ti ti-arrow-autofit-up" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Sweep funds</button>
+        </div>
+        <p class="section-label">Portfolio details</p>
+        <div class="info-box">
+          <div class="info-row"><span class="info-label">1-year return</span><span class="info-val" style="color:var(--ss-green)">8.6% p.a.</span></div>
+          <div class="info-row"><span class="info-label">Accessibility</span><span class="info-val">&lt;24 hrs business days</span></div>
+          <div class="info-row"><span class="info-label">Min. deposit</span><span class="info-val">R1</span></div>
+          <div class="info-row"><span class="info-label">Fee</span><span class="info-val">0.3% once-off</span></div>
+          <div class="info-row"><span class="info-label">Managed by</span><span class="info-val">Prescient · Ninety One · Satrix</span></div>
+        </div>
+        <div class="disc"><i class="ti ti-alert-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>This is an investment, not a deposit. Capital is not guaranteed. Vault22 FSP 55724.</div>
+        <div style="height:6px"></div>
+      </div>
+    </div>
+
+    <!-- SWEEP -->
+    <div id="s-sweep" class="scr">
+      <div class="back-row" onclick="go('s-wallet')"><i class="ti ti-chevron-left"></i> Wallet</div>
+      <div class="scroll">
+        <p style="font-size:15px;font-weight:500;margin-bottom:4px">Sweep to Smart Saver</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Move idle wallet funds to earn 8.6% p.a.</p>
+        <div class="info-box">
+          <div class="info-row"><span class="info-label">Wallet balance</span><span class="info-val" id="sweepWalletBal">R20.00</span></div>
+          <div class="info-row" style="border-bottom:none"><span class="info-label">Keep in wallet</span>
+            <span class="info-val">
+              <input type="number" id="keepAmt" min="0" step="1" value="0"
+                style="width:60px;text-align:right;font-size:12px;font-weight:500;border:0.5px solid #ccc;border-radius:6px;padding:3px 6px;font-family:var(--font)"
+                oninput="calcSweep()"> R
+            </span>
+          </div>
+        </div>
+        <div class="slider-row">
+          <label>Keep: R<span id="keepLbl">0</span></label>
+          <input type="range" id="keepSlider" min="0" step="1" value="0" oninput="syncSlider(this.value)">
+          <label id="sliderMax">R20</label>
+        </div>
+        <div class="sweep-green-box">
+          <div class="info-row"><span class="info-label">Sweeping to Smart Saver</span><span class="info-val" id="sweepAmt">R20.00</span></div>
+          <div class="info-row"><span class="info-label">Once-off fee (0.3%)</span><span class="info-val" id="sweepFee">R0.06</span></div>
+          <div class="info-row" style="border-bottom:none"><span class="info-label bold">Invested amount</span><span class="info-val bold" id="sweepNet">R19.94</span></div>
+        </div>
+        <div class="proj-box">
+          <i class="ti ti-sparkles" style="font-size:13px;vertical-align:-1px;margin-right:4px;color:var(--ss-green)"></i>
+          At 8.6%, <span id="proj1yr">R19.94</span> could grow to <strong id="proj1yrResult">R21.65</strong> in 12 months
+        </div>
+        <div class="disc"><i class="ti ti-alert-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Sweeps are non-refundable once confirmed. Withdrawals available &lt;24 hrs on business days.</div>
+        <button class="primary-btn" id="sweepBtn" onclick="confirmSweep()">Sweep R20.00 to Smart Saver</button>
+        <button class="ghost-btn" onclick="go('s-wallet')">Cancel</button>
+        <div style="height:6px"></div>
+      </div>
+    </div>
+
+    <!-- INVEST MORE -->
+    <div id="s-invest" class="scr">
+      <div class="back-row" onclick="go('s-portfolio')"><i class="ti ti-chevron-left"></i> Smart Saver</div>
+      <div class="scroll">
+        <p style="font-size:15px;font-weight:500;margin-bottom:4px">Invest in Smart Saver</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Charge to your linked card · 0.3% once-off fee</p>
+        <input type="text" id="cardAmt" class="amount-input" placeholder="R0.00" value="R500.00" oninput="calcCard(this.value)">
+        <div class="info-box">
+          <div class="info-row"><span class="info-label">Investment</span><span class="info-val" id="cAmt">R500.00</span></div>
+          <div class="info-row"><span class="info-label">Fee (0.3%)</span><span class="info-val" id="cFee">R1.50</span></div>
+          <div class="info-row"><span class="info-label" style="font-weight:500">Total charged</span><span class="info-val" style="font-weight:500" id="cTotal">R501.50</span></div>
+        </div>
+        <div class="paymethod">
+          <div class="radio-dot"></div>
+          <i class="ti ti-credit-card" style="font-size:18px;color:var(--ss-blue)"></i>
+          <span style="font-size:13px;font-weight:500">VISA Personal ···· 8023</span>
+        </div>
+        <div class="disc"><i class="ti ti-alert-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>This is an investment, not a deposit. Capital not guaranteed. Vault22 FSP 55724.</div>
+        <button class="primary-btn" onclick="confirmInvest()">Confirm investment</button>
+        <button class="ghost-btn" onclick="go('s-portfolio')">Cancel</button>
+        <div style="height:6px"></div>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="s-success" class="scr">
+      <div class="scroll" style="text-align:center;padding-top:28px">
+        <div class="success-ring"><i class="ti ti-check"></i></div>
+        <p style="font-size:17px;font-weight:500;margin-bottom:5px" id="successTitle">Done! Your money is working.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:18px" id="successSub">Funds invested in Vault22 Smart Saver</p>
+        <div class="info-box" style="text-align:left">
+          <div class="info-row"><span class="info-label">Amount invested</span><span class="info-val" id="sucAmt">—</span></div>
+          <div class="info-row"><span class="info-label">New invested total</span><span class="info-val" id="sucNewInvested">—</span></div>
+          <div class="info-row"><span class="info-label">New total value</span><span class="info-val" id="sucNewTotal">—</span></div>
+          <div class="info-row"><span class="info-label">Expected return</span><span class="info-val" style="color:var(--ss-green)">~8.6% p.a.</span></div>
+          <div class="info-row"><span class="info-label">Access</span><span class="info-val">&lt;24 hrs business days</span></div>
+        </div>
+        <button class="primary-btn" onclick="go('s-wallet')" style="margin-bottom:0">Back to wallet</button>
+        <button class="ghost-btn" onclick="alert('Withdrawals take less than 24 hours on business days. Tap \'Withdraw\' from the Smart Saver portfolio screen.')">How do I withdraw?</button>
+        <div style="height:6px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab clickable" id="tab-home" onclick="go('s-home')"><i class="ti ti-home"></i>Home</div>
+    <div class="tab"><i class="ti ti-coin"></i>Prepaid</div>
+    <div class="tab-cam"><div class="cam-btn"><i class="ti ti-camera"></i></div></div>
+    <div class="tab clickable" id="tab-wallet" onclick="go('s-wallet')"><i class="ti ti-wallet"></i>Wallet</div>
+    <div class="tab"><i class="ti ti-grid-dots"></i>More</div>
+  </div>
+</div>
+
+<script>
+let cur = 's-wallet';
+const state = { walletBal: 20, invested: 220, returns: 23.56 };
+
+function fmt(n){ return 'R' + n.toLocaleString('en-ZA', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+function renderPortfolio(){
+  const total = state.invested + state.returns;
+  document.getElementById('portInvested').textContent = fmt(state.invested);
+  document.getElementById('portReturns').textContent = fmt(state.returns);
+  document.getElementById('portTotal').textContent = fmt(total);
+}
+
+function renderWallet(){
+  document.getElementById('walletBalDisplay').textContent = fmt(state.walletBal);
+  document.getElementById('nudgeTitle').textContent = 'Your ' + fmt(state.walletBal) + ' could be earning 8.6%';
+  document.getElementById('sweepNudge').style.display = state.walletBal >= 1 ? 'flex' : 'none';
+}
+
+function go(id){
+  document.getElementById(cur).classList.remove('on');
+  cur = id;
+  document.getElementById(cur).classList.add('on');
+  document.getElementById('tab-home').classList.toggle('active', cur === 's-home');
+  document.getElementById('tab-wallet').classList.toggle('active', ['s-wallet','s-portfolio','s-sweep','s-invest','s-success'].includes(cur));
+  if(id === 's-sweep') initSweep();
+}
+
+function initSweep(){
+  const max = state.walletBal;
+  const ka = document.getElementById('keepAmt');
+  const ks = document.getElementById('keepSlider');
+  ka.max = max; ka.value = 0;
+  ks.max = max; ks.value = 0;
+  document.getElementById('sliderMax').textContent = fmt(max);
+  document.getElementById('sweepWalletBal').textContent = fmt(max);
+  calcSweep();
+}
+
+function syncSlider(v){ document.getElementById('keepAmt').value = v; calcSweep(); }
+
+function calcSweep(){
+  const max = state.walletBal;
+  const keep = Math.min(Math.max(parseFloat(document.getElementById('keepAmt').value) || 0, 0), max);
+  document.getElementById('keepSlider').value = keep;
+  document.getElementById('keepLbl').textContent = keep.toFixed(0);
+  const sweep = Math.max(max - keep, 0);
+  const fee = sweep * 0.003;
+  const net = parseFloat((sweep - fee).toFixed(2));
+  document.getElementById('sweepAmt').textContent = fmt(sweep);
+  document.getElementById('sweepFee').textContent = fmt(fee);
+  document.getElementById('sweepNet').textContent = fmt(net);
+  document.getElementById('proj1yr').textContent = fmt(net);
+  document.getElementById('proj1yrResult').textContent = fmt(net * 1.086);
+  const btn = document.getElementById('sweepBtn');
+  btn.textContent = 'Sweep ' + fmt(sweep) + ' to Smart Saver';
+  btn.disabled = sweep < 1;
+}
+
+function confirmSweep(){
+  const max = state.walletBal;
+  const keep = Math.min(Math.max(parseFloat(document.getElementById('keepAmt').value) || 0, 0), max);
+  const swept = max - keep;
+  const net = parseFloat((swept * 0.997).toFixed(2));
+  state.walletBal = parseFloat(keep.toFixed(2));
+  state.invested = parseFloat((state.invested + net).toFixed(2));
+  const newTotal = state.invested + state.returns;
+  document.getElementById('sucAmt').textContent = fmt(net);
+  document.getElementById('sucNewInvested').textContent = fmt(state.invested);
+  document.getElementById('sucNewTotal').textContent = fmt(newTotal);
+  document.getElementById('successTitle').textContent = 'Swept! Earning 8.6% now.';
+  document.getElementById('successSub').textContent = fmt(net) + ' moved from wallet to Smart Saver';
+  renderPortfolio(); renderWallet(); go('s-success');
+}
+
+function calcCard(v){
+  const n = parseFloat(v.replace(/[^0-9.]/g, '')) || 0;
+  document.getElementById('cAmt').textContent = fmt(n);
+  document.getElementById('cFee').textContent = fmt(n * 0.003);
+  document.getElementById('cTotal').textContent = fmt(n + n * 0.003);
+}
+
+function confirmInvest(){
+  const n = parseFloat(document.getElementById('cardAmt').value.replace(/[^0-9.]/g, '')) || 0;
+  const net = parseFloat((n * 0.997).toFixed(2));
+  state.invested = parseFloat((state.invested + net).toFixed(2));
+  const newTotal = state.invested + state.returns;
+  document.getElementById('sucAmt').textContent = fmt(net);
+  document.getElementById('sucNewInvested').textContent = fmt(state.invested);
+  document.getElementById('sucNewTotal').textContent = fmt(newTotal);
+  document.getElementById('successTitle').textContent = 'Done! Your money is working.';
+  document.getElementById('successSub').textContent = fmt(net) + ' invested in Vault22 Smart Saver';
+  renderPortfolio(); go('s-success');
+}
+
+document.getElementById('tab-wallet').classList.add('active');
+renderPortfolio(); renderWallet(); initSweep(); calcCard('500');
+</script>
+</body>
+</html>
